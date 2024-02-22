@@ -1,43 +1,53 @@
 provider "aws" {
-  region = "ap-south-1"
+ region = "ap-southeast-1"
 }
 
-resource "aws_eks_cluster" "my_cluster" {
-  name     = "my-eks-cluster"
-  role_arn = aws_iam_role.eks_cluster.arn
-  version  = "1.28"
+data "aws_iam_policy_document" "iam_role_data" {
+  statement {
+    effect = "Allow"
 
-  vpc_config {
-    subnet_ids = ["subnet-0ca47169f26baa191", "subnet-0ff405b6edb107c11"]
+    principals {
+      type        = "Service"
+      identifiers = ["eks.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
 }
 
-resource "aws_iam_role" "eks_cluster" {
-  name = "eks-cluster-role"
+#Iam Role
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "eks.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
+resource "aws_iam_role" "iamrole" {
+  name               = "eks-cluster-role"
+  assume_role_policy = data.aws_iam_policy_document.iam_role_data.json
 }
 
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy_attachment" {
+
+resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
+  role       = aws_iam_role.iamrole.name
 }
 
-resource "aws_iam_role_policy_attachment" "eks_service_policy_attachment" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role       = aws_iam_role.eks_cluster.name
+resource "aws_iam_role_policy_attachment" "AmazonEKSVPCResourceController" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
+  role       = aws_iam_role.iamrole.name
+}
+
+
+
+resource "aws_eks_cluster" "cluster" {
+  name     = "my-cluster"
+  role_arn = aws_iam_role.iamrole.arn
+  vpc_config {
+    subnet_ids = [
+      "subnet-080137d5f3f665b19",
+      "subnet-090f17d7ae9f58be2",
+      "subnet-04c181f0a61d345cc"
+    ]
+  }
+
+depends_on = [
+    aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
+    aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,
+  ]
 }

@@ -28,12 +28,6 @@ resource "aws_iam_role_policy_attachment" "AmazonEKSClusterPolicy" {
   role       = aws_iam_role.iamrole.name
 }
 
-resource "aws_iam_role_policy_attachment" "AmazonEKSVPCResourceController" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSVPCResourceController"
-  role       = aws_iam_role.iamrole.name
-}
-
-
 
 resource "aws_eks_cluster" "cluster" {
   name     = "my-cluster"
@@ -48,6 +42,5 @@ resource "aws_eks_cluster" "cluster" {
 
 depends_on = [
     aws_iam_role_policy_attachment.AmazonEKSClusterPolicy,
-    aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,
   ]
 }

@@ -17,7 +17,7 @@ data "aws_iam_policy_document" "iam_role_data" {
 
 #Iam Role
 
-resource "aws_iam_role" "iamrole" {
+resource "aws_iam_role" "v-role" {
   name               = "v-role"
   assume_role_policy = data.aws_iam_policy_document.iam_role_data.json
 }
